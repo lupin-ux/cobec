@@ -1,0 +1,113 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class ExpressionParser {
+private:
+    string expression;
+    int pos;
+
+    // Парсинг числа
+    long long parseNumber() {
+        long long num = 0;
+        bool negative = false;
+
+        // Пропускаем пробелы
+        skipSpaces();
+
+        // Проверяем знак
+        if (pos < expression.length() && expression[pos] == '-') {
+            negative = true;
+            pos++;
+        } else if (pos < expression.length() && expression[pos] == '+') {
+            pos++;
+        }
+
+        // Пропускаем пробелы после знака
+        skipSpaces();
+
+        // Считываем число
+        while (pos < expression.length() && isdigit(expression[pos])) {
+            num = num * 10 + (expression[pos] - '0');
+            pos++;
+        }
+
+        return negative ? -num : num;
+    }
+
+    // Пропуск пробелов
+    void skipSpaces() {
+        while (pos < expression.length() && expression[pos] == ' ') {
+            pos++;
+        }
+    }
+
+    // Рекурсивное вычисление выражения
+    long long evaluate() {
+        long long result = 0;
+        char operation = '+';
+
+        while (pos < expression.length()) {
+            skipSpaces();
+            
+            if (pos >= expression.length()) break;
+            
+            if (expression[pos] == ')') {
+                pos++;
+                return result;
+            }
+
+            long long current;
+
+            if (expression[pos] == '-' || expression[pos] == '+' || isdigit(expression[pos])) {
+                current = parseNumber();
+            }
+            else if (expression[pos] == '(') {
+                pos++; // Пропускаем '('
+                current = evaluate(); // Рекурсивный вызов
+                if (operation == '-') current = -current;
+            }
+            else {
+                operation = expression[pos];
+                pos++;
+                continue;
+            }
+
+            if (operation == '+') {
+                result += current;
+            } else {
+                result -= current;
+            }
+
+            skipSpaces();
+            
+            if (pos < expression.length() && (expression[pos] == '+' || expression[pos] == '-')) {
+                operation = expression[pos];
+                pos++;
+            }
+        }
+
+        return result;
+    }
+
+public:
+    ExpressionParser(const string& expr) : expression(expr), pos(0) {}
+
+    long long calculate() {
+        pos = 0; 
+        return evaluate();
+    }
+};
+
+int main() {
+    string input;
+    getline(cin, input);
+
+    ExpressionParser parser(input);
+    long long result = parser.calculate();
+
+    cout << result << endl;
+
+    return 0;
+}
